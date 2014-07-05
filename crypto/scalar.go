@@ -1,7 +1,5 @@
 package crypto
 
-import "code.google.com/p/go.crypto/sha3"
-
 func load3(b []byte) int64 {
 	i := int64(b[0])
 	i |= int64(b[1]) << 8
@@ -361,30 +359,6 @@ func scCheck(s *ECScalar) bool {
 	s6 := int64(load4(s[24:]))
 	s7 := int64(load4(s[28:]))
 	return 0 == ((signum(1559614444-s0) + (signum(1477600026-s1) << 1) + (signum(2734136534-s2) << 2) + (signum(350157278-s3) << 3) + (signum(-s4) << 4) + (signum(-s5) << 5) + (signum(-s6) << 6) + (signum(268435456-s7) << 7)) >> 8)
-}
-
-func hashToScalar(s *ECScalar, b []byte) {
-	h := sha3.NewKeccak256()
-	h.Write(b)
-	digest := make([]byte, 64)
-	h.Sum(digest[:0])
-
-	scReduce(s[:], digest)
-}
-
-func hashToEC(key *ECScalar) *geP3 {
-	var (
-		point2 geP1P1
-	)
-	r := new(geP3)
-	h := sha3.NewKeccak256()
-	h.Write(key[:])
-	digest := h.Sum(nil)
-	point := geFromFeFromBytesVarTime(digest)
-
-	geMul8(&point2, point)
-	geP1P1ToP3(r, &point2)
-	return r
 }
 
 func scAdd(s, a, b *ECScalar) {
