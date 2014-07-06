@@ -1,9 +1,8 @@
-package address
+package base58
 
-import "errors"
+import "math/big"
 
 const (
-	checksumSize         = 4
 	fullBlockSize        = 8
 	fullEncodedBlockSize = 11
 
@@ -13,6 +12,6 @@ const (
 var (
 	encodedBlockSizes = [...]int{0, 2, 3, 5, 6, 7, 9, 10, 11}
 	alphabet          = []byte("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
-	InvalidAddress    = errors.New("Invalid Address")
-	CorruptAddress    = errors.New("address has invalid checksum")
+	radix = big.NewInt(58)
+	bigZero = big.NewInt(0)
 )

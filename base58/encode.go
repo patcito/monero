@@ -1,4 +1,4 @@
-package address
+package base58
 
 import (
 	"bytes"

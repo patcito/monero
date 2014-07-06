@@ -1,8 +1,11 @@
-package address
+package base58
 
 import (
 	"bytes"
+	"hash/fnv"
 	"testing"
+	"time"
+	"io/ioutil"
 )
 
 type uint8beTo64Test struct {
@@ -26,15 +29,6 @@ func TestUint8beTo64(t *testing.T) {
 		n := uint8beTo64(x.b)
 		if n != x.n {
 			t.Errorf("%d: want %x, got %x", i, x.n, n)
-		}
-	}
-}
-
-func TestUint64To8be(t *testing.T) {
-	for i, x := range uint8beTo64Tests {
-		b := uint64To8be(x.n)
-		if !bytes.Equal(b, x.b) {
-			t.Errorf("uint64To8be %d: want %x, got %x", i, x.b, b)
 		}
 	}
 }
@@ -132,7 +126,7 @@ func TestEncode(t *testing.T) {
 		encode(out, x.b)
 		s := string(out)
 		if s != x.s {
-			t.Errorf("encode %d: wanted %q, got %q", i, x.s, s)
+			t.Errorf("encode %d %x: wanted %q, got %q", i,x.b, x.s, s)
 		}
 	}
 }
@@ -200,14 +194,73 @@ func TestEncodeAddress(t *testing.T) {
 		}
 	}
 }
+
 func TestDecodeAddress(t *testing.T) {
 	for i, x := range encodeDecodeAddrTests {
-		tag, b, err := decodeAddr(x.s)
-		if err != nil {
-			t.Errorf("%d: wanted %x, got error %v", i, x.b, err)
-		}
+		tag, b := decodeAddr(x.s)
 		if !bytes.Equal(b, x.b) {
 			t.Errorf("%d: wanted %d:%x, got %d:%x", i, x.tag, x.b, tag, b)
 		}
+	}
+}
+
+func TestEncoderDecoder(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+	h := fnv.New64()
+	tmp, _ := time.Now().MarshalBinary()
+	h.Write(tmp)
+	tmp = h.Sum(tmp[:0])
+
+	inFull := make([]byte, 1024)
+	//outFull := make([]byte, 4096)
+
+	for p := 0; p < 1024; p += 64 {
+		h.Sum(inFull[:p])
+	}
+
+	var (
+		buf bytes.Buffer
+		err error
+	)
+
+	for i := 0; i < 1024; i++ {
+		in := inFull[:i]
+		//out := outFull[:i]
+
+
+		enc := NewEncoder(&buf)
+		_, err = enc.Write(in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		enc.Close()
+
+		dec := NewDecoder(&buf)
+		out, err := ioutil.ReadAll(dec)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Equal(in, out) {
+			t.Fatalf("Wanted %x, got %x", in, out)
+		}
+	}
+}
+
+func BenchmarkEncoderDecoder(b *testing.B) {
+	h := fnv.New64()
+	tmp, _ := time.Now().MarshalBinary()
+	h.Write(tmp)
+	tmp = h.Sum(tmp[:0])
+	var buf bytes.Buffer
+
+	b.ResetTimer()
+
+	enc := NewEncoder(&buf)
+	dec := NewDecoder(&buf)
+	for i  := 0; i < b.N; i++ {
+		enc.Write(tmp)
+		dec.Read(tmp)
 	}
 }

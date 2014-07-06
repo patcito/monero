@@ -1,25 +1,25 @@
-package address
+package base58
 
 import (
-	"encoding/binary"
 	"bytes"
+	"encoding/binary"
 	"io"
 	"io/ioutil"
 	"math/big"
 	"strings"
 
 	"github.com/ehmry/monero/crypto"
-	//"github.com/ehmry/encoding/basex"
 )
 
-func decodeAddr(s string) (tag uint64, data []byte, err error) {
+const checksumSize = 4
+
+func decodeAddr(s string) (tag uint64, data []byte) {
 	b, err := DecodeString(s)
 	if err != nil {
 		return
 	}
 
 	if len(b) < checksumSize {
-		err = InvalidAddress
 		return
 	}
 
@@ -29,7 +29,6 @@ func decodeAddr(s string) (tag uint64, data []byte, err error) {
 	hash.Write(b)
 	digest := hash.Sum(nil)
 	if !bytes.Equal(checksum, digest[:checksumSize]) {
-		err = CorruptAddress
 		return
 	}
 
@@ -53,20 +52,19 @@ func NewDecoder(r io.Reader) io.Reader {
 }
 
 func (d *decoder) Read(p []byte) (n int, err error) {
-	if d.err != nil {
-		return 0, d.err
-	}
-
 	// Use leftover decode ouput from last read.
-	if len(d.out) > 0 {
+	if len(d.out) != 0 {
 		n = copy(p, d.out)
 		d.out = d.out[n:]
 		return n, nil
 	}
+	if d.err != nil {
+		return 0, d.err
+	}
 
 	var nn int
 	// Read a block
-	for len(p) > fullBlockSize {
+	for len(p) >= fullBlockSize {
 		nn, d.err = d.r.Read(d.buf[d.nbuf:fullEncodedBlockSize])
 		if d.nbuf+nn != fullEncodedBlockSize {
 			d.nbuf += nn
@@ -79,10 +77,10 @@ func (d *decoder) Read(p []byte) (n int, err error) {
 	}
 	if d.err == io.EOF {
 		if d.nbuf != 0 {
-			if len(p) >= d.nbuf {
+			if len(p) >= fullEncodedBlockSize-d.nbuf {
 				n += decodeBlock(p, d.buf[:d.nbuf])
 			} else {
-				decodeBlock(d.out, d.buf[:d.nbuf])
+				n += decodeBlock(d.out, d.buf[:d.nbuf])
 			}
 		}
 	}
@@ -120,61 +118,3 @@ func decodeBlock(dst, src []byte) int {
 }
 
 var encodedLengths = [...]int{0, 0, 1, 2, 2, 3, 4, 5, 6, 6, 7, 8}
-
-func uint64To8be(x uint64) []byte {
-	var l int
-	switch {
-	case x < 0xFF:
-		l = 1
-	case x < 0xFFFF:
-		l = 2
-	case x < 0xFFFFFF:
-		l = 3
-	case x < 0xFFFFFFFF:
-		l = 4
-	case x < 0xFFFFFFFFFF:
-		l = 5
-	case x < 0xFFFFFFFFFFFF:
-		l = 6
-	case x < 0xFFFFFFFFFFFFFF:
-		l = 7
-	default:
-		l = 8
-	}
-	b := make([]byte, l)
-	for i := l - 1; i > -1; i-- {
-		b[i] = byte(x)
-		x >>= 8
-	}
-	return b
-}
-
-func mul128(multiplier, multiplicand uint64) (n, productHi uint64) {
-	// multiplier   = ab = a * 2^32 + b
-	// multiplicand = cd = c * 2^32 + d
-	// ab * cd = a * c * 2^64 + (a * d + b * c) * 2^32 + b * d
-	a := multiplier >> 32
-	b := multiplier & 0xFFFFFFFF
-	c := multiplicand >> 32
-	d := multiplicand & 0xFFFFFFFF
-
-	ac := a * c
-	ad := a * d
-	bc := b * c
-	bd := b * d
-
-	adbc := ad + bc
-	var adbcCarry uint64
-	if adbc < ad {
-		adbcCarry = 1
-	}
-
-	// multiplier * multiplicand = product_hi * 2^64 + product_lo
-	productLo := bd + (adbc << 32)
-	var productLoCarry uint64
-	if productLo < bd {
-		productLoCarry = 1
-	}
-	productHi = ac + (adbc >> 32) + (adbcCarry << 32) + productLoCarry
-	return productLo, productHi
-}
