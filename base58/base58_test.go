@@ -3,9 +3,9 @@ package base58
 import (
 	"bytes"
 	"hash/fnv"
+	"io/ioutil"
 	"testing"
 	"time"
-	"io/ioutil"
 )
 
 type uint8beTo64Test struct {
@@ -120,13 +120,22 @@ var encodeTests = []*encodeTest{
 	{"22222222222VtB5VXc", []byte{0x06, 0x15, 0x60, 0x13, 0x76, 0x28, 0x79, 0xF7, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
 }
 
+func TestEncodedLen(t *testing.T) {
+	for i, x := range encodeTests {
+		l := EncodedLen(len(x.b))
+		if l != len(x.s) {
+			t.Errorf("EncodedLen %d: %s, want %d, got %d", i, x.s, len(x.s), l)
+		}
+	}
+}
+
 func TestEncode(t *testing.T) {
 	for i, x := range encodeTests {
 		out := make([]byte, len(x.s))
-		encode(out, x.b)
+		Encode(out, x.b)
 		s := string(out)
 		if s != x.s {
-			t.Errorf("encode %d %x: wanted %q, got %q", i,x.b, x.s, s)
+			t.Errorf("encode %d: %x wanted %q, got %q", i, x.b, x.s, s)
 		}
 	}
 }
@@ -136,6 +145,25 @@ func TestEncodeToString(t *testing.T) {
 		s := EncodeToString(x.b)
 		if s != x.s {
 			t.Errorf("encode %d: wanted %q, got %q", i, x.s, s)
+		}
+	}
+}
+
+func TestDecodedLen(t *testing.T) {
+	for i, x := range encodeTests {
+		l := DecodedLen(len(x.s))
+		if l != len(x.b) {
+			t.Errorf("EncodedLen %d: %s, want %d, got %d", i, x.s, len(x.b), l)
+		}
+	}
+}
+
+func TestDecode(t *testing.T) {
+	for i, x := range encodeTests {
+		out := make([]byte, len(x.b))
+		Decode(out, []byte(x.s))
+		if !bytes.Equal(out, x.b) {
+			t.Errorf("encode %d: %s wanted %x, got %x", i, x.s, x.b, out)
 		}
 	}
 }
@@ -214,7 +242,6 @@ func TestEncoderDecoder(t *testing.T) {
 	tmp = h.Sum(tmp[:0])
 
 	inFull := make([]byte, 1024)
-	//outFull := make([]byte, 4096)
 
 	for p := 0; p < 1024; p += 64 {
 		h.Sum(inFull[:p])
@@ -227,8 +254,6 @@ func TestEncoderDecoder(t *testing.T) {
 
 	for i := 0; i < 1024; i++ {
 		in := inFull[:i]
-		//out := outFull[:i]
-
 
 		enc := NewEncoder(&buf)
 		_, err = enc.Write(in)
@@ -254,13 +279,19 @@ func BenchmarkEncoderDecoder(b *testing.B) {
 	h.Write(tmp)
 	tmp = h.Sum(tmp[:0])
 	var buf bytes.Buffer
-
+	var err error
 	b.ResetTimer()
 
 	enc := NewEncoder(&buf)
 	dec := NewDecoder(&buf)
-	for i  := 0; i < b.N; i++ {
-		enc.Write(tmp)
-		dec.Read(tmp)
+	for i := 0; i < b.N; i++ {
+		_, err = enc.Write(tmp)
+		if err != nil {
+			b.Fatal(err)
+		}
+		_, err = dec.Read(tmp)
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 }

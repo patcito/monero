@@ -8,6 +8,69 @@ import (
 	"github.com/ehmry/monero/crypto"
 )
 
+func encodeBlock(dst, src []byte) {
+	var num uint64
+	var i int
+	if len(src) > fullBlockSize {
+		num = uint8beTo64(src[:fullBlockSize])
+		i = fullEncodedBlockSize
+	} else {
+		num = uint8beTo64(src)
+		i = encodedBlockSizes[len(src)]
+	}
+	i--
+	for i >= 0 {
+		remainder := num % alphabetSize
+		num /= alphabetSize
+		dst[i] = alphabet[remainder]
+		i--
+	}
+}
+
+func uint8beTo64(b []byte) (r uint64) {
+	i := 0
+	switch 9 - len(b) {
+	case 1:
+		r |= uint64(b[i])
+		i++
+		fallthrough
+	case 2:
+		r <<= 8
+		r |= uint64(b[i])
+		i++
+		fallthrough
+	case 3:
+		r <<= 8
+		r |= uint64(b[i])
+		i++
+		fallthrough
+	case 4:
+		r <<= 8
+		r |= uint64(b[i])
+		i++
+		fallthrough
+	case 5:
+		r <<= 8
+		r |= uint64(b[i])
+		i++
+		fallthrough
+	case 6:
+		r <<= 8
+		r |= uint64(b[i])
+		i++
+		fallthrough
+	case 7:
+		r <<= 8
+		r |= uint64(b[i])
+		i++
+		fallthrough
+	case 8:
+		r <<= 8
+		r |= uint64(b[i])
+	}
+	return r
+}
+
 func encodeAddr(tag uint64, data []byte) string {
 	var buf bytes.Buffer
 	enc := NewEncoder(&buf)
@@ -90,22 +153,18 @@ func (e *encoder) Close() error {
 	return e.err
 }
 
-func EncodeToString(src []byte) string {
-	var buf bytes.Buffer
-	enc := NewEncoder(&buf)
-	enc.Write(src)
-	enc.Close()
-	return buf.String()
+func EncodedLen(n int) int {
+	return ((n / fullBlockSize) * fullEncodedBlockSize) + encodedBlockSizes[n%fullBlockSize]
 }
 
-func encode(dst, src []byte) {
+func Encode(dst, src []byte) {
 	if len(src) == 0 {
 		return
 	}
 	fullBlockCount := len(src) / fullBlockSize
 	lastBlockSize := len(src) % fullBlockSize
 	//if len(dst) < fullBlockCount {
-	//	panic("encode: dst is too small to hold src")
+	//	panic("Encode: dst is too small to hold src")
 	//}
 
 	for i := 0; i < fullBlockCount; i++ {
@@ -116,65 +175,10 @@ func encode(dst, src []byte) {
 	}
 }
 
-func encodeBlock(dst, src []byte) {
-	var num uint64
-	var i int
-	if len(src) > fullBlockSize {
-		num = uint8beTo64(src[:fullBlockSize])
-		i = fullEncodedBlockSize
-	} else {
-		num = uint8beTo64(src)
-		i = encodedBlockSizes[len(src)]
-	}
-	i--
-	for i >= 0 {
-		remainder := num % alphabetSize
-		num /= alphabetSize
-		dst[i] = alphabet[remainder]
-		i--
-	}
-}
-
-func uint8beTo64(b []byte) (r uint64) {
-	i := 0
-	switch 9 - len(b) {
-	case 1:
-		r |= uint64(b[i])
-		i++
-		fallthrough
-	case 2:
-		r <<= 8
-		r |= uint64(b[i])
-		i++
-		fallthrough
-	case 3:
-		r <<= 8
-		r |= uint64(b[i])
-		i++
-		fallthrough
-	case 4:
-		r <<= 8
-		r |= uint64(b[i])
-		i++
-		fallthrough
-	case 5:
-		r <<= 8
-		r |= uint64(b[i])
-		i++
-		fallthrough
-	case 6:
-		r <<= 8
-		r |= uint64(b[i])
-		i++
-		fallthrough
-	case 7:
-		r <<= 8
-		r |= uint64(b[i])
-		i++
-		fallthrough
-	case 8:
-		r <<= 8
-		r |= uint64(b[i])
-	}
-	return r
+func EncodeToString(src []byte) string {
+	var buf bytes.Buffer
+	enc := NewEncoder(&buf)
+	enc.Write(src)
+	enc.Close()
+	return buf.String()
 }
