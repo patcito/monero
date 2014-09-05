@@ -6,6 +6,8 @@ import (
 	"code.google.com/p/go.crypto/sha3"
 )
 
+// NewHash returns a standard hash.Hash for use with Monero.
+// The current algorithm is Keccak256 (sha3).
 func NewHash() hash.Hash { return sha3.NewKeccak256() }
 
 func hashToScalar(s *ECScalar, b []byte) {

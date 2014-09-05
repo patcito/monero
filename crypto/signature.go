@@ -30,7 +30,7 @@ func generateSignature(prefixHash []byte, public *PublicKey, secret *SecretKey) 
 }
 */
 
-func checkSignature(prefixHash []byte, pub *PublicKey, sig []byte) bool {
+func CheckSignature(prefixHash []byte, pub *PublicKey, sig []byte) bool {
 	var (
 		tmp2 geP2
 		tmp3 geP3

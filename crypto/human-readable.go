@@ -12,8 +12,6 @@ var (
 
 type ECPoint [32]byte
 
-type ECScalar [32]byte
-
 type SecretKey [32]byte
 
 type PublicKey [32]byte
