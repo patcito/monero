@@ -1,17 +1,7 @@
 package crypto
 
-import (
-	"hash"
-
-	"code.google.com/p/go.crypto/sha3"
-)
-
-// NewHash returns a standard hash.Hash for use with Monero.
-// The current algorithm is Keccak256 (sha3).
-func NewHash() hash.Hash { return sha3.NewKeccak256() }
-
 func hashToScalar(s *[32]byte, b []byte) {
-	h := sha3.NewKeccak256()
+	h := NewHash()
 	h.Write(b)
 	digest := make([]byte, 64)
 	h.Sum(digest[:0])
@@ -24,7 +14,7 @@ func hashToEC(key *[32]byte) *geP3 {
 		point2 geP1P1
 	)
 	r := new(geP3)
-	h := sha3.NewKeccak256()
+	h := NewHash()
 	h.Write(key[:])
 	digest := h.Sum(nil)
 	point := geFromFeFromBytesVarTime(digest)

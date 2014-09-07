@@ -20,7 +20,10 @@ func TestWordToBytes(t *testing.T) {
 
 	var b [32]byte
 	WordsToBytes(&b, words)
-	result := BytesToWords(b[:])
+	result, err := BytesToWords(b[:])
+	if err != nil {
+		t.Fatalf("error recovering word list, %s", err)
+	}
 	if len(result) != 24 {
 		t.Fatalf("recovered word list was %d, not 24 long", len(result))
 	}
