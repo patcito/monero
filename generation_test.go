@@ -48,18 +48,16 @@ var tests = []*test{
 	},
 }
 
-
-
 func TestRecovery(t *testing.T) {
 	for _, test := range tests {
-		account, err := RecoverMnemonic(test.words)
+		account, err := RecoverAccountWithMnemonic(test.words)
 		if err != nil {
 			t.Fatal("mnemonic recovery failed,", err)
 		}
 		if test.addr != account.String() {
 			t.Errorf("mnemonic recovery failed,\nwanted %s\ngot    %s", test.addr, account)
 		}
-		words := account.Mnemonic() 
+		words := account.Mnemonic()
 		for i := 0; i < len(words); i++ {
 			if test.words[i] != words[i] {
 				t.Errorf("Mnemonic() failed %d,\nwanted %s\ngot    %s", i, test.addr, account)
@@ -67,29 +65,3 @@ func TestRecovery(t *testing.T) {
 		}
 	}
 }
-
-/*
-func BenchmarkGenerateKeys(b *testing.B) {
-	h := crypto.NewHash()
-	seed := h.Sum(nil)
-
-	for i := 0; i < b.N; i++ {
-		h.Write(seed)
-		h.Sum(seed[:0])
-		crypto.KeysFromBytes(seed)
-	}
-}
-
-
-func BenchmarkGenerateAddress(b *testing.B) {
-	h := crypto.NewHash()
-	seed := h.Sum(nil)
-
-	for i := 0; i < b.N; i++ {
-		h.Write(seed)
-		h.Sum(seed[:0])
-		GenerateAddress(seed)
-	}
-}
-
-*/

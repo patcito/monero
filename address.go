@@ -20,6 +20,7 @@ var (
 	InvalidAddress       = errors.New("address contains invalid keys")
 )
 
+// DecodeAddress decodes an address from the standard textual representation.
 func DecodeAddress(s string) (*Address, error) {
 	pa := new(Address)
 	err := pa.UnmarshalText([]byte(s))
@@ -29,6 +30,7 @@ func DecodeAddress(s string) (*Address, error) {
 	return pa, nil
 }
 
+// Address contains public keys for the spend and view aspects of a Monero account.
 type Address struct {
 	spend, view *[32]byte
 }
@@ -104,7 +106,6 @@ func (a *Address) MarshalText() (text []byte, err error) {
 }
 
 func (a *Address) UnmarshalText(text []byte) error {
-
 	// Decode from base58
 	b := make([]byte, base58.DecodedLen(len(text)))
 	_, err := base58.Decode(b, text)
@@ -112,22 +113,4 @@ func (a *Address) UnmarshalText(text []byte) error {
 		return err
 	}
 	return a.UnmarshalBinary(b)
-}
-
-// GenerateAddress generates an address from a secret key.
-func GenerateAddress(seed *[32]byte) *Address {
-	var secret [32]byte
-	copy(secret[:], seed[:])
-	spend := new([32]byte)
-	crypto.PublicFromSecret(spend, &secret)
-
-	// the view secret key is the hash of the spend secret key
-	h := crypto.NewHash()
-	h.Write(secret[:])
-	h.Sum(secret[:0])
-
-	view := new([32]byte)
-	crypto.PublicFromSecret(view, &secret)
-
-	return &Address{spend: spend, view: view}
 }

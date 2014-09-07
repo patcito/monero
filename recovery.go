@@ -6,6 +6,7 @@ import (
 	"fmt"
 )
 
+// WordsToBytes converts 12 or 24 Electrum words into a key buffer.
 func WordsToBytes(dst *[32]byte, words []string) error {
 	if len(words) != 12 && len(words) != 24 {
 		return fmt.Errorf("word list must be 12 or 24 words long, not %d", len(words))
@@ -51,6 +52,7 @@ func WordsToBytes(dst *[32]byte, words []string) error {
 	return nil
 }
 
+// WordsToBytes converts bytes into Electrum words.
 func BytesToWords(b []byte) (words []string) {
 	buf := bytes.NewReader(b)
 	var w1, w2, w3, val uint32
