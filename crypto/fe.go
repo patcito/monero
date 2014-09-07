@@ -593,11 +593,12 @@ func feDivPowM1(r, u, v *fe) {
 }
 
 func feIsNegative(f *fe) byte {
-	b := feToBytes(f)
+	var b [32]byte
+	feToBytes(&b, f)
 	return byte(b[0] & 1)
 }
 
-func feToBytes(h *fe) *[32]byte {
+func feToBytes(dst *[32]byte, h *fe) {
 	/*
 	   Preconditions:
 	     |h| bounded by 1.1*2^26,1.1*2^25,1.1*2^26,1.1*2^25,etc.
@@ -693,7 +694,6 @@ func feToBytes(h *fe) *[32]byte {
 	  Goal: Output h0+...+2^230 h9.
 	*/
 
-	dst := new([32]byte)
 	dst[0] = byte(h0 >> 0)
 	dst[1] = byte(h0 >> 8)
 	dst[2] = byte(h0 >> 16)
@@ -726,11 +726,11 @@ func feToBytes(h *fe) *[32]byte {
 	dst[29] = byte(h9 >> 2)
 	dst[30] = byte(h9 >> 10)
 	dst[31] = byte(h9 >> 18)
-	return dst
 }
 
 func feIsNonZero(f *fe) bool {
-	s := feToBytes(f)
+	var s [32]byte
+	feToBytes(&s, f)
 	return (((int)(s[0]|s[1]|s[2]|s[3]|s[4]|s[5]|s[6]|s[7]|s[8]|
 		s[9]|s[10]|s[11]|s[12]|s[13]|s[14]|s[15]|s[16]|s[17]|
 		s[18]|s[19]|s[20]|s[21]|s[22]|s[23]|s[24]|s[25]|s[26]|

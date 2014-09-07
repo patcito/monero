@@ -10,7 +10,7 @@ import (
 // The current algorithm is Keccak256 (sha3).
 func NewHash() hash.Hash { return sha3.NewKeccak256() }
 
-func hashToScalar(s *ECScalar, b []byte) {
+func hashToScalar(s *[32]byte, b []byte) {
 	h := sha3.NewKeccak256()
 	h.Write(b)
 	digest := make([]byte, 64)
@@ -19,7 +19,7 @@ func hashToScalar(s *ECScalar, b []byte) {
 	scReduce(s[:], digest)
 }
 
-func hashToEC(key *ECScalar) *geP3 {
+func hashToEC(key *[32]byte) *geP3 {
 	var (
 		point2 geP1P1
 	)

@@ -16,7 +16,14 @@ type SecretKey [32]byte
 
 type PublicKey [32]byte
 
-func (sec *SecretKey) Check() bool { return scCheck((*ECScalar)(sec)) }
+// PublicFromSecret generates a public key from a secret key.
+func PublicFromSecret(public, secret *[32]byte) {
+	var point geP3
+	geScalarMultBase(&point, secret)
+	geP3ToBytes(public, &point)
+}
+
+func (sec *SecretKey) Check() bool { return scCheck((*[32]byte)(sec)) }
 
 func (sec *SecretKey) PublicKey() (*PublicKey, error) {
 	if !sec.Check() {
@@ -24,9 +31,10 @@ func (sec *SecretKey) PublicKey() (*PublicKey, error) {
 	}
 
 	var point geP3
-	geScalarMultBase(&point, (*ECScalar)(sec))
-	s := geP3ToBytes(&point)
-	return (*PublicKey)(s), nil
+	geScalarMultBase(&point, (*[32]byte)(sec))
+	p := new([32]byte)
+	geP3ToBytes(p, &point)
+	return (*PublicKey)(p), nil
 }
 
 func checkKey(key []byte) bool {
@@ -43,7 +51,7 @@ func newECScalar() *ECScalar {
 	return s
 }
 
-func generateKeyDerivation(pub, sec *ECScalar) (*[32]byte, error) {
+func generateKeyDerivation(pub, sec *[32]byte) (*[32]byte, error) {
 	var (
 		point  geP3
 		point2 geP2
@@ -61,10 +69,14 @@ func generateKeyDerivation(pub, sec *ECScalar) (*[32]byte, error) {
 	geMul8(&point3, &point2)
 	geP1P1ToP2(&point2, &point3)
 
-	return geToBytes(&point2), nil
+	d := new([32]byte)
+	geToBytes(d, &point2)
+	return d, nil
 }
 
 func hashToPoint(h []byte) *[32]byte {
 	point := geFromFeFromBytesVarTime(h)
-	return geToBytes(point)
+	b := new([32]byte)
+	geToBytes(b, point)
+	return b
 }

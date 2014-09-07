@@ -2,7 +2,7 @@ package crypto
 
 type ECScalar [32]byte
 
-func (s *ECScalar) Check() bool { return scCheck(s) }
+func (s *ECScalar) Check() bool { return scCheck((*[32]byte)(s)) }
 
 func load3(b []byte) int64 {
 	i := int64(b[0])
@@ -340,10 +340,10 @@ func scReduce(dst, src []byte) {
 	dst[31] = byte(s11 >> 17)
 }
 
-// scReduce performs some sort of unfathomable reduction
-// on src[:32] to dst[:32]. If src and dst are the same
-// slice it will not affect the output.
-func scReduce32(dst, src []byte) {
+
+// Reduce32 reduces src[:32] to dst[:32].
+// If src and dst are the same slice it will not affect the output.
+func Reduce32(dst, src *[32]byte) {
 	s0 := int64(0x1fffff & load3(src[0:]))
 	s1 := int64(0x1fffff & (load4(src[2:]) >> 5))
 	s2 := int64(0x1fffff & (load3(src[5:]) >> 2))
@@ -522,19 +522,20 @@ func scReduce32(dst, src []byte) {
 	dst[31] = byte(s11 >> 17)
 }
 
-func scIsNonZero(s *ECScalar) bool {
+func scIsNonZero(s *[32]byte) bool {
 	return (((int(s[0]) | int(s[1]) | int(s[2]) | int(s[3]) | int(s[4]) | int(s[5]) | int(s[6]) | int(s[7]) | int(s[8]) |
 		int(s[9]) | int(s[10]) | int(s[11]) | int(s[12]) | int(s[13]) | int(s[14]) | int(s[15]) | int(s[16]) | int(s[17]) |
 		int(s[18]) | int(s[19]) | int(s[20]) | int(s[21]) | int(s[22]) | int(s[23]) | int(s[24]) | int(s[25]) | int(s[26]) |
 		int(s[27]) | int(s[28]) | int(s[29]) | int(s[30]) | int(s[31])) - 1) >> 8) == 0
 }
 
+
 func signum(a int64) int64 {
 	// Assumes that a != INT64_MIN
 	return (a >> 63) - ((-a) >> 63)
 }
 
-func scCheck(s *ECScalar) bool {
+func scCheck(s *[32]byte) bool {
 	s0 := int64(load4(s[0:]))
 	s1 := int64(load4(s[4:]))
 	s2 := int64(load4(s[8:]))
@@ -546,7 +547,7 @@ func scCheck(s *ECScalar) bool {
 	return 0 == ((signum(1559614444-s0) + (signum(1477600026-s1) << 1) + (signum(2734136534-s2) << 2) + (signum(350157278-s3) << 3) + (signum(-s4) << 4) + (signum(-s5) << 5) + (signum(-s6) << 6) + (signum(268435456-s7) << 7)) >> 8)
 }
 
-func scAdd(s, a, b *ECScalar) {
+func scAdd(s, a, b *[32]byte) {
 	a0 := 0x1fffff & load3(a[0:])
 	a1 := 0x1fffff & (load4(a[2:]) >> 5)
 	a2 := 0x1fffff & (load3(a[5:]) >> 2)
@@ -748,7 +749,7 @@ func scAdd(s, a, b *ECScalar) {
 	s[31] = byte(s11 >> 17)
 }
 
-func scSub(s, a, b *ECScalar) {
+func scSub(s, a, b *[32]byte) {
 	a0 := 2097151 & load3(a[:])
 	a1 := 2097151 & (load4(a[2:]) >> 5)
 	a2 := 2097151 & (load3(a[5:]) >> 2)
@@ -959,7 +960,7 @@ func scSub(s, a, b *ECScalar) {
 	s[31] = byte(s11 >> 17)
 }
 
-func scMulSub(s, a *ECScalar, b, c []byte) {
+func scMulSub(s, a *[32]byte, b, c []byte) {
 	// Input:
 	//   a[0]+256*a[1]+...+256^31*a[31] = a
 	//   b[0]+256*b[1]+...+256^31*b[31] = b
