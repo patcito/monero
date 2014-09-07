@@ -11,7 +11,8 @@ type geP3 struct {
 }
 
 func (p *geP3) String() string {
-	b := geP3ToBytes(p)
+	var b [32]byte
+	geP3ToBytes(&b, p)
 	return hex.EncodeToString(b[:])
 }
 
@@ -296,14 +297,13 @@ func geP3ToP2(r *geP2, p *geP3) {
 	feCopy(&r.Z, &p.Z)
 }
 
-func geP3ToBytes(h *geP3) *[32]byte {
+func geP3ToBytes(dst *[32]byte, h *geP3) {
 	var recip, x, y fe
 	feInvert(&recip, &h.Z)
 	feMul(&x, &h.X, &recip)
 	feMul(&y, &h.Y, &recip)
-	s := feToBytes(&y)
-	s[31] ^= feIsNegative(&x) << 7
-	return s
+	feToBytes(dst, &y)
+	dst[31] ^= feIsNegative(&x) << 7
 }
 
 func geP3Dbl(r *geP1P1, p *geP3) {
@@ -313,7 +313,7 @@ func geP3Dbl(r *geP1P1, p *geP3) {
 	geP2Dbl(r, &q)
 }
 
-func geScalarMultBase(h *geP3, a *ECScalar) {
+func geScalarMultBase(h *geP3, a *[32]byte) {
 	var (
 		e     [64]int8
 		carry int8
@@ -391,7 +391,7 @@ func geSub(r *geP1P1, p *geP3, q *geCached) {
 	feAdd(&r.T, &t0, &r.T)
 }
 
-func geScalarMult(r *geP2, a *ECScalar, A *geP3) {
+func geScalarMult(r *geP2, a *[32]byte, A *geP3) {
 	// Assumes that a[31] <= 127
 	var (
 		e                [64]int8
@@ -456,15 +456,14 @@ func geScalarMult(r *geP2, a *ECScalar, A *geP3) {
 	}
 }
 
-func geToBytes(h *geP2) *[32]byte {
+func geToBytes(b *[32]byte, h *geP2) {
 	var recip, x, y fe
 
 	feInvert(&recip, &h.Z)
 	feMul(&x, &h.X, &recip)
 	feMul(&y, &h.Y, &recip)
-	b := feToBytes(&y)
+	feToBytes(b, &y)
 	b[31] ^= feIsNegative(&x) << 7
-	return b
 }
 
 func geFromFeFromBytesVarTime(s []byte) *geP2 {
@@ -599,7 +598,7 @@ setsign:
 	return r
 }
 
-func slide(r *[256]int8, a *ECScalar) {
+func slide(r *[256]int8, a *[32]byte) {
 	var i, b, k uint
 
 	for i = 0; i < 256; i++ {
@@ -662,7 +661,7 @@ func geDsmPrecomp(r *geDsmp, s *geP3) {
 	geP3ToCached(&r[7], &u)
 }
 
-func geDoubleScalarMultBaseVarTime(r *geP2, a *ECScalar, A *geP3, b *ECScalar) {
+func geDoubleScalarMultBaseVarTime(r *geP2, a *[32]byte, A *geP3, b *[32]byte) {
 	// r = a * A + b * B
 	// where a = a[0]+256*a[1]+...+256^31 a[31].
 	// and b = b[0]+256*b[1]+...+256^31 b[31].
@@ -712,7 +711,7 @@ func geDoubleScalarMultBaseVarTime(r *geP2, a *ECScalar, A *geP3, b *ECScalar) {
 
 }
 
-func geDoubleScalarMultPrecompVarTime(r *geP2, a *ECScalar, A *geP3, b *ECScalar, Bi *geDsmp) {
+func geDoubleScalarMultPrecompVarTime(r *geP2, a *[32]byte, A *geP3, b *[32]byte, Bi *geDsmp) {
 	var (
 		aslide, bslide [256]int8
 		Ai             geDsmp // A, 3A, 5A, 7A, 9A, 11A, 13A, 15A

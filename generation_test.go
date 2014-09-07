@@ -1,0 +1,95 @@
+package monero
+
+import (
+	"math/rand"
+	"strings"
+	"testing"
+	"time"
+
+	//"github.com/ehmry/monero/crypto"
+)
+
+func TestWordToBytes(t *testing.T) {
+	rand.Seed(time.Now().Unix())
+
+	words := make([]string, 24)
+
+	for i := 0; i < 24; i++ {
+		words[i] = wordsArray[rand.Intn(numwords)]
+	}
+
+	var b [32]byte
+	WordsToBytes(&b, words)
+	result := BytesToWords(b[:])
+	if len(result) != 24 {
+		t.Fatalf("recovered word list was %d, not 24 long", len(result))
+	}
+
+	for i := 0; i < 24; i++ {
+		if words[i] != result[i] {
+			t.Errorf("Word mismatch: %02d - %q != %q", i, words[i], result[i])
+		}
+	}
+}
+
+type test struct {
+	addr  string
+	words []string
+}
+
+var tests = []*test{
+	{
+		"43GVEVSitCqRxtuRXWbpsu6trCmHXhqNM4myNZka86JMMtw75eWVduKRJ2rz3yjTUoCPf9mkJHjfC9JRZUM7f3fSM52vYej",
+		strings.Fields("happen former recall kill tonight magic mercy threw somehow arrive meant sheet charm victim once indeed hug bubble wash storm hill bid respect excuse"),
+	},
+	{
+		"4A4ZprYVAdC8iKm1bVwPmQi2Q7KtEZL94d7tCHEaQV9FBa4UgeUCDaRAeqvSRgwbeQ67xrSmABVQyMZX2KuuNAV3Bk8cLW1",
+		strings.Fields("empty favorite good iron spend memory grand dark direction brain out pleasure climb hardly out claim neither lick hidden button aim shiver gently treat"),
+	},
+}
+
+
+
+func TestRecovery(t *testing.T) {
+	for _, test := range tests {
+		account, err := RecoverMnemonic(test.words)
+		if err != nil {
+			t.Fatal("mnemonic recovery failed,", err)
+		}
+		if test.addr != account.String() {
+			t.Errorf("mnemonic recovery failed,\nwanted %s\ngot    %s", test.addr, account)
+		}
+		words := account.Mnemonic() 
+		for i := 0; i < len(words); i++ {
+			if test.words[i] != words[i] {
+				t.Errorf("Mnemonic() failed %d,\nwanted %s\ngot    %s", i, test.addr, account)
+			}
+		}
+	}
+}
+
+/*
+func BenchmarkGenerateKeys(b *testing.B) {
+	h := crypto.NewHash()
+	seed := h.Sum(nil)
+
+	for i := 0; i < b.N; i++ {
+		h.Write(seed)
+		h.Sum(seed[:0])
+		crypto.KeysFromBytes(seed)
+	}
+}
+
+
+func BenchmarkGenerateAddress(b *testing.B) {
+	h := crypto.NewHash()
+	seed := h.Sum(nil)
+
+	for i := 0; i < b.N; i++ {
+		h.Write(seed)
+		h.Sum(seed[:0])
+		GenerateAddress(seed)
+	}
+}
+
+*/

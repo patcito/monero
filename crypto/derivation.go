@@ -2,17 +2,17 @@ package crypto
 
 import "encoding/binary"
 
-func derivationToScalar(derivation []byte, outputIndex uint64) *ECScalar {
+func derivationToScalar(derivation []byte, outputIndex uint64) *[32]byte {
 	buf := make([]byte, 40)
 	copy(buf, derivation[:])
 	n := binary.PutUvarint(buf[32:], outputIndex)
 
-	s := new(ECScalar)
+	s := new([32]byte)
 	hashToScalar(s, buf[:32+n])
 	return s
 }
 
-func derivePublicKey(derivation []byte, outputIndex uint64, public *ECScalar) (derivedKey *PublicKey, err error) {
+func derivePublicKey(derivation []byte, outputIndex uint64, public *[32]byte) (derivedKey *PublicKey, err error) {
 	var (
 		point1 geP3
 		point2 geP3
@@ -30,16 +30,18 @@ func derivePublicKey(derivation []byte, outputIndex uint64, public *ECScalar) (d
 	geAdd(&point4, &point1, &point3)
 	geP1P1ToP2(&point5, &point4)
 
-	derivedKey = (*PublicKey)(geToBytes(&point5))
+	b := new([32]byte)
+	geToBytes(b, &point5)
+	derivedKey = (*PublicKey)(b)
 	return
 }
 
-func deriveSecretKey(derivation []byte, outputIndex uint64, secret *ECScalar) (derivedKey *ECScalar, err error) {
+func deriveSecretKey(derivation []byte, outputIndex uint64, secret *[32]byte) (derivedKey *[32]byte, err error) {
 	if !scCheck(secret) {
 		return nil, InvalidSecret
 	}
 
-	derivedKey = new(ECScalar)
+	derivedKey = new([32]byte)
 
 	scalar := derivationToScalar(derivation, outputIndex)
 	scAdd(derivedKey, secret, scalar)

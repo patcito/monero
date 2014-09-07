@@ -3,7 +3,7 @@ package crypto
 //import "crypto/rand"
 
 type Signature struct {
-	c, r ECScalar
+	c, r [32]byte
 }
 
 /*
@@ -30,11 +30,11 @@ func generateSignature(prefixHash []byte, public *PublicKey, secret *SecretKey) 
 }
 */
 
-func CheckSignature(prefixHash []byte, pub *PublicKey, sig []byte) bool {
+func checkSignature(prefixHash []byte, pub *PublicKey, sig []byte) bool {
 	var (
 		tmp2 geP2
 		tmp3 geP3
-		c    ECScalar
+		c    [32]byte
 	)
 
 	buf := make([]byte, 96)
@@ -46,7 +46,7 @@ func CheckSignature(prefixHash []byte, pub *PublicKey, sig []byte) bool {
 	}
 
 	// still need a consistant way to pass arrays around
-	var sigC, sigR ECScalar
+	var sigC, sigR [32]byte
 	copy(sigC[:], sig[:32])
 	copy(sigR[:], sig[32:])
 
@@ -54,19 +54,22 @@ func CheckSignature(prefixHash []byte, pub *PublicKey, sig []byte) bool {
 		return false
 	}
 	geDoubleScalarMultBaseVarTime(&tmp2, &sigC, &tmp3, &sigR)
-	copy(buf[64:], geToBytes(&tmp2)[:])
+	var b [32]byte
+	geToBytes(&b, &tmp2)
+	copy(buf[64:], b[:])
 	hashToScalar(&c, buf)
 	scSub(&c, &c, &sigC)
 	return !scIsNonZero(&c)
 }
 
-func generateKeyImage(public, secret *ECScalar) *[32]byte {
+func generateKeyImage(public, secret *[32]byte) *[32]byte {
 	var point2 geP2
 
 	point := hashToEC(public)
 	geScalarMult(&point2, secret, point)
-	return geToBytes(&point2)
-
+	b := new([32]byte)
+	geToBytes(b, &point2)
+	return b
 }
 
 type ringSignature struct {
@@ -75,11 +78,11 @@ type ringSignature struct {
 	b    []ECPoint
 }
 
-func checkRingSignature(prefixHash, image []byte, pubs []*ECScalar, sig []byte) bool {
+func checkRingSignature(prefixHash, image []byte, pubs []*[32]byte, sig []byte) bool {
 	var (
 		imageUnp geP3
 		imagePre geDsmp
-		sum, h   ECScalar
+		sum, h   [32]byte
 	)
 
 	if !geFromBytesVarTime(&imageUnp, image) {
@@ -110,6 +113,7 @@ func checkRingSignature(prefixHash, image []byte, pubs []*ECScalar, sig []byte) 
 	j = 32
 	k = 64
 
+	var b [32]byte
 	for i := 0; i < len(pubs); i++ {
 		var (
 			tmp2 geP2
@@ -124,13 +128,16 @@ func checkRingSignature(prefixHash, image []byte, pubs []*ECScalar, sig []byte) 
 		}
 
 		geDoubleScalarMultBaseVarTime(&tmp2, &sigs[i].c, &tmp3, &sigs[i].r)
-		copy(buf[j:k], geToBytes(&tmp2)[:])
+		
+		geToBytes(&b, &tmp2)
+		copy(buf[j:k], b[:])
 		j += 32
 		k += 32
 		tmp3 = *hashToEC(pubs[i])
 
 		geDoubleScalarMultPrecompVarTime(&tmp2, &sigs[i].r, &tmp3, &sigs[i].c, &imagePre)
-		copy(buf[j:k], geToBytes(&tmp2)[:])
+		geToBytes(&b ,&tmp2)
+		copy(buf[j:k], b[:])
 		j += 32
 		k += 32
 		scAdd(&sum, &sum, &sigs[i].c)

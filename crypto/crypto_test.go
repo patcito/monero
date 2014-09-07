@@ -11,8 +11,8 @@ import (
 	"testing"
 )
 
-func decodeScalar(s string) *ECScalar {
-	sc := new(ECScalar)
+func decodeScalar(s string) *[32]byte {
+	sc := new([32]byte)
 	hex.Decode(sc[:], []byte(s))
 	return sc
 }
@@ -77,7 +77,7 @@ func TestCheckScalar(t *testing.T) {
 
 func TestHashToScalar(t *testing.T) {
 	lines := readTestLines(t, "hash_to_scalar")
-	var s ECScalar
+	var s [32]byte
 	for i, args := range lines {
 		in, _ := hex.DecodeString(args[0])
 		hashToScalar(&s, in)
@@ -154,7 +154,7 @@ func TestDerivePublicKey(t *testing.T) {
 		test                *PublicKey
 
 		outputIndex uint64
-		base        *ECScalar
+		base        *[32]byte
 		valid       bool
 
 		err error
@@ -290,7 +290,7 @@ func TestCheckRingSignature(t *testing.T) {
 		prefixHash, _ := hex.DecodeString(args[0])
 		image, _ := hex.DecodeString(args[1])
 		pubCount, _ := strconv.Atoi(args[2])
-		pubs := make([]*ECScalar, pubCount)
+		pubs := make([]*[32]byte, pubCount)
 		for j := 0; j < pubCount; j++ {
 			pubs[j] = decodeScalar(args[3+j])
 		}
