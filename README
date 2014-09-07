@@ -5,17 +5,4 @@ the documentation at http://godoc.org/github.com/ehmry/monero
 
 The most interesting that has been built with it
 thus far is a vanity address generator.
-
-Install it with this:
-	$ go install github.com/ehmry/monero/monero-vanity
-
-When it matches an input regex it prints out an address and a
-secret key in hex form. Use the -convert option to get an 
-Electrum word list and then use the recovery feature of 
-simplewallet to build a new wallet file.
-
-It comes with the option to encrypt output to a PGP key, useful
-when running on 'borrowed cycles'. Just make sure to pipe the
-output to a file or all you'll end up with is a trashed terminal.
-
-Good luck!
+github.com/ehmry/monero/monero-vanity
