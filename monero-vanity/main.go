@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"code.google.com/p/go.crypto/openpgp"
 	"code.google.com/p/go.crypto/openpgp/packet"
@@ -25,6 +26,7 @@ var (
 	bench            bool
 	skip, numWorkers int
 	convert, pgpFn   string
+	duration         time.Duration
 
 	res   []*regexp.Regexp
 	flags *flag.FlagSet
@@ -45,6 +47,7 @@ func main() {
 	flags.StringVar(&pgpFn, "pgp", "", "encrypt result to the PGP key in the following file")
 	flags.BoolVar(&bench, "bench", false, "run performance benchmark")
 	flags.StringVar(&convert, "convert", "", "convert a hex key to a mnemonic seed")
+	flags.DurationVar(&duration, "stop", 0, "give up after the given duration")
 
 	flags.Parse(os.Args[1:])
 	args := flags.Args()
@@ -104,8 +107,21 @@ func main() {
 		go worker(c)
 	}
 
-	result := <-c
-	key := result[:]
+	var key []byte
+
+	if duration != 0 {
+		select {
+		case <-time.After(duration):
+			os.Exit(0)
+		case result := <-c:
+			key = result[:]
+			break
+		}
+	} else {
+		result := <-c
+		key = result[:]
+	}
+
 	addr, _ := monero.RecoverAccount(key)
 
 	fmt.Fprintf(resultW, "%s %x\n", addr, key)
