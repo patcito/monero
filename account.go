@@ -25,7 +25,8 @@ func (a *Account) String() string {
 // Mnemonic returns an Electrum style mnemonic representation 
 // of the account secret key.
 func (a *Account) Mnemonic() []string {
-	return BytesToWords(a.spendS[:])
+	words, _ := BytesToWords(a.spendS[:])
+	return words
 }
 
 // Recover recovers an account using a secret key.

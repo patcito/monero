@@ -53,12 +53,13 @@ func WordsToBytes(dst *[32]byte, words []string) error {
 }
 
 // WordsToBytes converts bytes into Electrum words.
-func BytesToWords(b []byte) (words []string) {
+func BytesToWords(b []byte) (words []string, err error) {
 	buf := bytes.NewReader(b)
 	var w1, w2, w3, val uint32
 
 	if len(b)%4 != 0 {
-		panic("bytesToWords called on a slice not divisible by 4")
+		err = fmt.Errorf("BytesToWords called on a slice not divisible by 4")
+		return
 	}
 
 	words = make([]string, len(b)/4*3)
