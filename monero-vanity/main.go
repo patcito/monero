@@ -102,7 +102,7 @@ func main() {
 		resultW = os.Stdout
 	}
 
-	c := make(chan *[32]byte)
+	c := make(chan *[32]byte, 1)
 	for i := 0; i < numWorkers; i++ {
 		go worker(c)
 	}

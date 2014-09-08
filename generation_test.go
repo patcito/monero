@@ -49,6 +49,14 @@ var tests = []*test{
 		"4A4ZprYVAdC8iKm1bVwPmQi2Q7KtEZL94d7tCHEaQV9FBa4UgeUCDaRAeqvSRgwbeQ67xrSmABVQyMZX2KuuNAV3Bk8cLW1",
 		strings.Fields("empty favorite good iron spend memory grand dark direction brain out pleasure climb hardly out claim neither lick hidden button aim shiver gently treat"),
 	},
+	{
+		"468vZRyTA7F5mjPFXTFcwp3bsTBHbMLztKD9B3FbHZewiyHXBWKmAgFcQChApA5gM34eAyX6siSpy2vwifZ8Cd6nSuq5Dau",
+		strings.Fields("handle brother whistle realize money upon leg level doubt shove count memory wonderful pop clear huge tap less age circle slowly weather gasp grief"),
+	},
+	{
+		"455MJ7FvGZL8rmxHSjE4z7AFsCJTmF9L2U3nLw4fD7zDRT1K5xjYUadVEcuekSbDereYgAQcWrJGyd42K4L9bTgb7WKJiFV",
+		strings.Fields("claim pride forward strain piece group torture stream balance unknown lick common useless empty prayer good sunlight trouble return snap gone focus measure scale"),
+	},
 }
 
 func TestRecovery(t *testing.T) {
