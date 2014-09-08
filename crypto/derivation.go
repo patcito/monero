@@ -12,7 +12,7 @@ func derivationToScalar(derivation []byte, outputIndex uint64) *[32]byte {
 	return s
 }
 
-func derivePublicKey(derivation []byte, outputIndex uint64, public *[32]byte) (derivedKey *PublicKey, err error) {
+func derivePublicKey(derivation []byte, outputIndex uint64, public *[32]byte) (derivedKey *[32]byte, err error) {
 	var (
 		point1 geP3
 		point2 geP3
@@ -32,7 +32,7 @@ func derivePublicKey(derivation []byte, outputIndex uint64, public *[32]byte) (d
 
 	b := new([32]byte)
 	geToBytes(b, &point5)
-	derivedKey = (*PublicKey)(b)
+	derivedKey = b
 	return
 }
 

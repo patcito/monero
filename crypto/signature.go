@@ -30,7 +30,7 @@ func generateSignature(prefixHash []byte, public *PublicKey, secret *SecretKey) 
 }
 */
 
-func checkSignature(prefixHash []byte, pub *PublicKey, sig []byte) bool {
+func checkSignature(prefixHash []byte, pub *[32]byte, sig []byte) bool {
 	var (
 		tmp2 geP2
 		tmp3 geP3
@@ -128,7 +128,7 @@ func checkRingSignature(prefixHash, image []byte, pubs []*[32]byte, sig []byte) 
 		}
 
 		geDoubleScalarMultBaseVarTime(&tmp2, &sigs[i].c, &tmp3, &sigs[i].r)
-		
+
 		geToBytes(&b, &tmp2)
 		copy(buf[j:k], b[:])
 		j += 32
@@ -136,7 +136,7 @@ func checkRingSignature(prefixHash, image []byte, pubs []*[32]byte, sig []byte) 
 		tmp3 = *hashToEC(pubs[i])
 
 		geDoubleScalarMultPrecompVarTime(&tmp2, &sigs[i].r, &tmp3, &sigs[i].c, &imagePre)
-		geToBytes(&b ,&tmp2)
+		geToBytes(&b, &tmp2)
 		copy(buf[j:k], b[:])
 		j += 32
 		k += 32

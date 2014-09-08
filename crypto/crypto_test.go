@@ -104,14 +104,16 @@ func TestCheckKey(t *testing.T) {
 
 func TestSecretKeyToPublicKey(t *testing.T) {
 	lines := readTestLines(t, "secret_key_to_public_key")
+	publicTest := new([32]byte)
 	for i, args := range lines {
-		secret := (*SecretKey)(decodeScalar(args[0]))
-		publicTest, err := secret.PublicKey()
+		secret := decodeScalar(args[0])
+		PublicFromSecret(publicTest, secret)
 
 		valid := args[1] == "true"
+		validTest := CheckSecret(secret)
 
-		if (err == nil) != valid {
-			t.Errorf("secret_key_to_public_key %d: want error to be %v, error was %v", i, valid, err == nil)
+		if valid != validTest {
+			t.Errorf("secret_key_to_public_key %d: want error to be %v, error was %v", i, valid, validTest)
 		}
 
 		if valid {
@@ -151,7 +153,7 @@ func TestDerivePublicKey(t *testing.T) {
 	lines := readTestLines(t, "derive_public_key")
 	var (
 		derivation, control []byte
-		test                *PublicKey
+		test                *[32]byte
 
 		outputIndex uint64
 		base        *[32]byte
@@ -230,7 +232,7 @@ func TestCheckSignature(t *testing.T) {
 	lines := readTestLines(t, "check_signature")
 	for i, args := range lines {
 		prefixHash, _ := hex.DecodeString(args[0])
-		pub := (*PublicKey)(decodeScalar(args[1]))
+		pub := decodeScalar(args[1])
 		sig, _ := hex.DecodeString(args[2])
 		control := args[3] == "true"
 

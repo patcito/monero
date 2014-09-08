@@ -1,10 +1,6 @@
 package monero
 
-import (
-	"errors"
-
-	"github.com/ehmry/monero/crypto"
-)
+import "github.com/ehmry/monero/crypto"
 
 // Account contains public and private keys for the spend and view
 // aspects of a Monero account.
@@ -22,21 +18,19 @@ func (a *Account) String() string {
 	return a.Address().String()
 }
 
-// Mnemonic returns an Electrum style mnemonic representation 
+// Doesn't work like that as far as I can tell. 
+//
+// Mnemonic returns an Electrum style mnemonic representation
 // of the account secret key.
-func (a *Account) Mnemonic() []string {
+func (a *Account) _Mnemonic() []string {
 	words, _ := BytesToWords(a.spendS[:])
 	return words
 }
 
 // Recover recovers an account using a secret key.
-func RecoverAccount(secret []byte) (*Account, error) {
-	if len(secret) != 32 {
-		return nil, errors.New("cannot recover, key has invalid length")
-	}
-
+func RecoverAccount(seed *[32]byte) (*Account, error) {
 	spendS := new([32]byte)
-	copy(spendS[:], secret)
+	crypto.SecretFromSeed(spendS, seed)
 
 	spendP := new([32]byte)
 	crypto.PublicFromSecret(spendP, spendS)
@@ -44,9 +38,9 @@ func RecoverAccount(secret []byte) (*Account, error) {
 	// the view secret key is the hash of the spend secret key
 	viewS := new([32]byte)
 	h := crypto.NewHash()
-	h.Write(spendS[:])
+	h.Write(seed[:])
 	h.Sum(viewS[:0])
-	crypto.Reduce32(viewS, viewS)
+	crypto.SecretFromSeed(viewS, viewS)
 
 	viewP := new([32]byte)
 	crypto.PublicFromSecret(viewP, viewS)
@@ -59,12 +53,12 @@ func RecoverAccount(secret []byte) (*Account, error) {
 	}, nil
 }
 
-// RecoverAccountWithMnemonic recovers an account 
+// RecoverAccountWithMnemonic recovers an account
 // with an Electrum style word list.
 func RecoverAccountWithMnemonic(words []string) (*Account, error) {
-	buf := new([32]byte)
-	if err := WordsToBytes(buf, words); err != nil {
+	seed := new([32]byte)
+	if err := WordsToBytes(seed, words); err != nil {
 		return nil, err
 	}
-	return RecoverAccount(buf[:])
+	return RecoverAccount(seed)
 }

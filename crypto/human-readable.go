@@ -12,9 +12,12 @@ var (
 
 type ECPoint [32]byte
 
-type SecretKey [32]byte
+type secretKey [32]byte
 
-type PublicKey [32]byte
+type publicKey [32]byte
+
+// SecretFrom seed reduces a seed to a secret key.
+func SecretFromSeed(secret, seed *[32]byte) { reduce32(secret, seed) }
 
 // PublicFromSecret generates a public key from a secret key.
 func PublicFromSecret(public, secret *[32]byte) {
@@ -23,19 +26,7 @@ func PublicFromSecret(public, secret *[32]byte) {
 	geP3ToBytes(public, &point)
 }
 
-func (sec *SecretKey) Check() bool { return scCheck((*[32]byte)(sec)) }
-
-func (sec *SecretKey) PublicKey() (*PublicKey, error) {
-	if !sec.Check() {
-		return nil, InvalidSecret
-	}
-
-	var point geP3
-	geScalarMultBase(&point, (*[32]byte)(sec))
-	p := new([32]byte)
-	geP3ToBytes(p, &point)
-	return (*PublicKey)(p), nil
-}
+func CheckSecret(secret *[32]byte) bool { return scCheck(secret) }
 
 func checkKey(key []byte) bool {
 	var point geP3

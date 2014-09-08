@@ -340,10 +340,9 @@ func scReduce(dst, src []byte) {
 	dst[31] = byte(s11 >> 17)
 }
 
-
-// Reduce32 reduces src[:32] to dst[:32].
+// reduce32 reduces src[:32] to dst[:32].
 // If src and dst are the same slice it will not affect the output.
-func Reduce32(dst, src *[32]byte) {
+func reduce32(dst, src *[32]byte) {
 	s0 := int64(0x1fffff & load3(src[0:]))
 	s1 := int64(0x1fffff & (load4(src[2:]) >> 5))
 	s2 := int64(0x1fffff & (load3(src[5:]) >> 2))
@@ -528,7 +527,6 @@ func scIsNonZero(s *[32]byte) bool {
 		int(s[18]) | int(s[19]) | int(s[20]) | int(s[21]) | int(s[22]) | int(s[23]) | int(s[24]) | int(s[25]) | int(s[26]) |
 		int(s[27]) | int(s[28]) | int(s[29]) | int(s[30]) | int(s[31])) - 1) >> 8) == 0
 }
-
 
 func signum(a int64) int64 {
 	// Assumes that a != INT64_MIN

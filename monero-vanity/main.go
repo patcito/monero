@@ -107,33 +107,32 @@ func main() {
 		go worker(c)
 	}
 
-	var key []byte
+	var seed *[32]byte
 
 	if duration != 0 {
 		select {
 		case <-time.After(duration):
 			os.Exit(0)
-		case result := <-c:
-			key = result[:]
+		case seed = <-c:
 			break
 		}
 	} else {
-		result := <-c
-		key = result[:]
+		seed = <-c
 	}
 
-	addr, _ := monero.RecoverAccount(key)
+	addr, _ := monero.RecoverAccount(seed)
 
-	fmt.Fprintf(resultW, "%s %x\n", addr, key)
+	fmt.Fprintf(resultW, "%s %x\n", addr, seed[:])
+	
 	resultW.Close()
-	rand.Read(key) // wipe this buffer
+	rand.Read(seed[:]) // trash this buffer
 	os.Exit(0)
 }
 
 func benchmark(b *testing.B) {
-	var public, secret [32]byte
+	var seed, secret, public [32]byte
 
-	slice := secret[:]
+	slice := seed[:]
 
 	enc := make([]byte, 11)
 	raw := make([]byte, 8)
@@ -141,8 +140,10 @@ func benchmark(b *testing.B) {
 
 	h := newHash()
 	for i := 0; i < b.N; i++ {
-		// need to encode multiples of 8 bytes
+		crypto.SecretFromSeed(&secret, &seed)
 		crypto.PublicFromSecret(&public, &secret)
+
+		// need to encode base58 in multiples of 8 bytes
 		copy(raw[1:], public[:7])
 		base58.Encode(enc, raw)
 
@@ -151,14 +152,14 @@ func benchmark(b *testing.B) {
 		}
 
 		h.Write(slice)
-		h.Sum(secret[:0])
+		h.Sum(slice[:0])
 	}
 }
 
 func worker(c chan *[32]byte) {
-	var public, secret [32]byte
+	var seed, secret, public [32]byte
 
-	slice := secret[:]
+	slice := seed[:]
 	rand.Read(slice)
 
 	enc := make([]byte, 11)
@@ -167,21 +168,24 @@ func worker(c chan *[32]byte) {
 
 	h := newHash()
 	for {
-		// need to encode multiples of 8 bytes
+		crypto.SecretFromSeed(&secret, &seed)
 		crypto.PublicFromSecret(&public, &secret)
+
+		// need to encode multiples of 8 bytes
 		copy(raw[1:], public[:7])
 		base58.Encode(enc, raw)
 
 		for _, re := range res {
 			if re.Match(enc[skip:]) {
-				// clean hash state
-				h.Reset()
-				h.Sum(nil)
-				c <- &secret
+				// trash hash state
+				rand.Read(secret[:0])
+				h.Write(secret[:])
+
+				c <- &seed
 				return
 			}
 		}
 		h.Write(slice)
-		h.Sum(secret[:0])
+		h.Sum(slice[:0])
 	}
 }
