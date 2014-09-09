@@ -73,9 +73,7 @@ func generateKeyImage(public, secret *[32]byte) *[32]byte {
 }
 
 type ringSignature struct {
-	hash [32]byte
-	a    []ECPoint
-	b    []ECPoint
+	hash, a, b [32]byte
 }
 
 func checkRingSignature(prefixHash, image []byte, pubs []*[32]byte, sig []byte) bool {

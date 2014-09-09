@@ -32,7 +32,7 @@ func DecodeAddress(s string) (*Address, error) {
 
 // Address contains public keys for the spend and view aspects of a Monero account.
 type Address struct {
-	spend, view *[32]byte
+	spend, view [32]byte
 }
 
 func (a *Address) MarshalBinary() (data []byte, err error) {
@@ -78,13 +78,6 @@ func (a *Address) UnmarshalBinary(data []byte) error {
 
 	if len(data) != 64 {
 		return InvalidAddressLength
-	}
-
-	if a.spend == nil {
-		a.spend = new([32]byte)
-	}
-	if a.view == nil {
-		a.view = new([32]byte)
 	}
 
 	copy(a.spend[:], data[:32])

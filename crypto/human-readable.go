@@ -10,12 +10,6 @@ var (
 	InvalidPublicKey = errors.New("invalid public key")
 )
 
-type ECPoint [32]byte
-
-type secretKey [32]byte
-
-type publicKey [32]byte
-
 // SecretFrom seed reduces a seed to a secret key.
 func SecretFromSeed(secret, seed *[32]byte) { reduce32(secret, seed) }
 
@@ -34,11 +28,11 @@ func checkKey(key []byte) bool {
 }
 
 // newECScalar generates a new random ECScalar
-func newECScalar() *ECScalar {
+func newECScalar() *[32]byte {
 	tmp := make([]byte, 64)
 	rand.Read(tmp)
-	s := new(ECScalar)
-	scReduce(tmp, s[:])
+	s := new([32]byte)
+	scReduce(s[:], tmp)
 	return s
 }
 
@@ -70,4 +64,12 @@ func hashToPoint(h []byte) *[32]byte {
 	b := new([32]byte)
 	geToBytes(b, point)
 	return b
+}
+
+// ViewFromSpend generates a view secret key from a spend secret key.
+func ViewFromSpend(view, spend *[32]byte) {
+	h := NewHash()
+	h.Write(spend[:])
+	h.Sum(view[:0])
+	SecretFromSeed(view, view)
 }
