@@ -3,6 +3,7 @@ package monero
 import (
 	"bytes"
 	"errors"
+	"io"
 
 	"github.com/ehmry/monero/crypto"
 )
@@ -67,4 +68,18 @@ func RecoverAccountWithMnemonic(words []string) (*Account, error) {
 		return nil, err
 	}
 	return RecoverAccount(seed)
+}
+
+// GenerateAccountGenerates a new account.
+func GenerateAccount(random io.Reader) (acc *Account, err error) {
+	acc = new(Account)
+	acc.spendS, err = crypto.GenerateSecret(random)
+	if err != nil {
+		return nil, err
+	}
+
+	crypto.PublicFromSecret(&acc.spendP, &acc.spendS)
+	crypto.ViewFromSpend(&acc.viewS, &acc.spendS)
+	crypto.PublicFromSecret(&acc.viewP, &acc.viewS)
+	return acc, nil
 }

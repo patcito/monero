@@ -1,6 +1,7 @@
 package monero
 
 import (
+	crand "crypto/rand"
 	"math/rand"
 	"strings"
 	"testing"
@@ -106,6 +107,27 @@ func TestRecovery(t *testing.T) {
 			if test.words[i] != words[i] {
 				t.Errorf("Mnemonic() failed %d, wanted %q got %q", i, test.words[i], words[i])
 			}
+		}
+	}
+
+	for i := 0; i < 32; i++ {
+		first, err := GenerateAccount(crand.Reader)
+		if err != nil {
+			t.Fatal("GenerateAccount:", err)
+		}
+
+		words, err := first.Mnemonic()
+		if err != nil {
+			t.Fatal("Mnemonic:", err)
+		}
+
+		second, err := RecoverAccountWithMnemonic(words)
+		if err != nil {
+			t.Fatal("RecoverAccountWithMnemonic:", err)
+		}
+
+		if first.String() != second.String() {
+			t.Errorf("account generation and recovery failed\n %s != %s", first, second)
 		}
 	}
 }

@@ -3,6 +3,7 @@ package crypto
 import (
 	"crypto/rand"
 	"errors"
+	"io"
 )
 
 var (
@@ -72,4 +73,11 @@ func ViewFromSpend(view, spend *[32]byte) {
 	h.Write(spend[:])
 	h.Sum(view[:0])
 	SecretFromSeed(view, view)
+}
+
+func GenerateSecret(random io.Reader) (sec [32]byte, err error) {
+	tmp := make([]byte, 64)
+	_, err = random.Read(tmp)
+	scReduce(sec[:], tmp)
+	return
 }
