@@ -1,7 +1,7 @@
 Go package for use with the Monero crypto-currency.
 
 Not much has been implemented so far, but you can view
-the documentation at http://godoc.org/github.com/ehmry/monero
+the documentation at http://godoc.org/github.com/patcito/monero
 
 The most interesting that has been built with it
 thus far is a vanity address generator.
