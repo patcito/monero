@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/ehmry/monero/base58"
-	"github.com/ehmry/monero/crypto"
+	"github.com/patcito/monero/base58"
+	"github.com/patcito/monero/crypto"
 )
 
 const ChecksumSize = 4

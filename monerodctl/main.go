@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ehmry/monero/rpc"
+	"github.com/patcito/monero/rpc"
 	"github.com/spf13/cobra"
 )
 
